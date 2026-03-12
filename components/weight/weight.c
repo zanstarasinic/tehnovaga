@@ -15,6 +15,9 @@ static float max_capacity_kg = 40000.0f;
 static float stability_threshold = 5.0f;
 static int stability_count_needed = 40; /* 2s at 20Hz */
 static int stability_counter = 0;
+static int sensor_fail_count[HX711_NUM_SENSORS];
+
+#define SENSOR_FAIL_THRESHOLD 10  /* consecutive failures before marking sensor down */
 
 esp_err_t weight_init(void)
 {
@@ -23,6 +26,10 @@ esp_err_t weight_init(void)
     buf_idx = 0;
     buf_full = false;
     stability_counter = 0;
+    memset(sensor_fail_count, 0, sizeof(sensor_fail_count));
+    for (int i = 0; i < HX711_NUM_SENSORS; i++) {
+        last_result.sensor_ok[i] = true;
+    }
 
     ESP_LOGI(TAG, "Weight processor initialized (capacity=%.0f kg)", max_capacity_kg);
     return ESP_OK;
@@ -55,8 +62,20 @@ esp_err_t weight_update(void)
         float w;
         esp_err_t err = hx711_get_weight(i, &w);
         if (err != ESP_OK) {
-            ESP_LOGW(TAG, "Sensor %d read failed", i);
+            sensor_fail_count[i]++;
+            if (sensor_fail_count[i] >= SENSOR_FAIL_THRESHOLD) {
+                last_result.sensor_ok[i] = false;
+                if (sensor_fail_count[i] == SENSOR_FAIL_THRESHOLD) {
+                    ESP_LOGE(TAG, "Sensor %d offline", i);
+                }
+            }
             w = last_result.sensor_kg[i]; /* hold last value */
+        } else {
+            if (!last_result.sensor_ok[i]) {
+                ESP_LOGI(TAG, "Sensor %d back online", i);
+            }
+            sensor_fail_count[i] = 0;
+            last_result.sensor_ok[i] = true;
         }
 
         sensor_buf[i][buf_idx] = w;

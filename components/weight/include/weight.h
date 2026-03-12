@@ -9,6 +9,7 @@
 typedef struct {
     float total_kg;
     float sensor_kg[4];
+    bool sensor_ok[4];
     bool stable;
     float capacity_pct;
 } weight_result_t;

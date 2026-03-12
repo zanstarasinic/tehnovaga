@@ -241,16 +241,22 @@ static void cal_toggle_step(void)
 static void update_display(const weight_result_t *r)
 {
     char buf[32];
-
-    snprintf(buf, sizeof(buf), "%.0f", r->total_kg);
-    nextion_set_text("tTotal", buf);
+    bool any_error = false;
 
     for (int i = 0; i < 4; i++) {
         char comp[16];
         snprintf(comp, sizeof(comp), "tS%d", i);
-        snprintf(buf, sizeof(buf), "%.0f", r->sensor_kg[i]);
+        if (r->sensor_ok[i]) {
+            snprintf(buf, sizeof(buf), "%.0f", r->sensor_kg[i]);
+        } else {
+            snprintf(buf, sizeof(buf), "ERR");
+            any_error = true;
+        }
         nextion_set_text(comp, buf);
     }
+
+    snprintf(buf, sizeof(buf), "%s%.0f", any_error ? "! " : "", r->total_kg);
+    nextion_set_text("tTotal", buf);
 
     nextion_set_value("jBar", (int32_t)r->capacity_pct);
     nextion_set_value("pStable", r->stable ? 1 : 0);
