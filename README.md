@@ -2,8 +2,6 @@
 
 ESP32-based onboard weight scale for truck and tractor trailers. Four load cells under the trailer floor measure cargo weight in real time, displayed on a Nextion touchscreen mounted in the cab.
 
-**Technical lead:** Žan Starašinič
-
 ## Hardware
 
 | Component | Model | Specs |
