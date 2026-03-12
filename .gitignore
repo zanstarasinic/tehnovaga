@@ -7,3 +7,6 @@ dependencies.lock
 *.pyc
 __pycache__/
 CLAUDE.md
+test/test_weight
+test/test_nextion
+test/test_hx711
